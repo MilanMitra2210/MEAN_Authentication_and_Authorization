@@ -1,9 +1,10 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { hashPassword, comparePassword, isValidEmail, verifyPhoneNumberAndMail, sendVerificationMail } from "../helpers/authHelper";
 import userModel from "../models/userModel";
 import JWT from "jsonwebtoken";
 import otpModel from "../models/otpModel";
 import RoleModel from "../models/roleModel";
+
 
 const registerController = async (
   req: Request,
@@ -77,7 +78,7 @@ const registerController = async (
 };
 
 // Post Login
-const loginController = async (req: Request, res: Response): Promise<any> => {
+const loginController = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
   try {
     const { email, password } = req.body;
 
@@ -94,7 +95,9 @@ const loginController = async (req: Request, res: Response): Promise<any> => {
     }
 
     // check user
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ email }).populate("roles", "role");
+    // const {roles} = user;
+
     if (!user) {
       return res.status(404).send({
         success: false,
@@ -112,7 +115,7 @@ const loginController = async (req: Request, res: Response): Promise<any> => {
 
     // token
     const jwt_secret_key: string = process.env.JWT_SECRET || "";
-    const token = await JWT.sign({ _id: user._id }, jwt_secret_key, {
+    const token = await JWT.sign({ _id: user._id, isAdmin: user.isAdmin, roles: roles }, jwt_secret_key, {
       expiresIn: "7d",
     });
 
@@ -189,12 +192,18 @@ const updateDataController = async (req: Request, res: Response): Promise<any> =
       const hashedPassword = await hashPassword(updatedUserData.password);
       updatedUserData.password = hashedPassword;
     }
+    const role = await RoleModel.find({role: updatedUserData.role});
+    existingUser.firstName = updatedUserData.firstName || existingUser.firstName;
+    existingUser.lastName = updatedUserData.lastName || existingUser.lastName;
     existingUser.name = updatedUserData.name || existingUser.name;
     existingUser.email = updatedUserData.email || existingUser.email;
-    existingUser.phone = updatedUserData.phone || existingUser.phone;
-    existingUser.address = updatedUserData.address || existingUser.address;
-    existingUser.gender = updatedUserData.gender || existingUser.gender;
-    existingUser.hobbies = updatedUserData.hobbies || existingUser.hobbies;
+    existingUser.profileImage = updatedUserData.profileImage || existingUser.profileImage;
+    // existingUser.roles = role || existingUser.roles;
+    // existingUser.phone = updatedUserData.phone || existingUser.phone;
+    // existingUser.address = updatedUserData.address || existingUser.address;
+    // existingUser.gender = updatedUserData.gender || existingUser.gender;
+    // existingUser.hobbies = updatedUserData.hobbies || existingUser.hobbies;
+    
 
     // Save updated user data
     await existingUser.save();
