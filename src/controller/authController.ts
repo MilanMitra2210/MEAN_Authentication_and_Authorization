@@ -3,17 +3,24 @@ import { hashPassword, comparePassword, isValidEmail, verifyPhoneNumberAndMail, 
 import userModel from "../models/userModel";
 import JWT from "jsonwebtoken";
 import otpModel from "../models/otpModel";
+import RoleModel from "../models/roleModel";
 
 const registerController = async (
   req: Request,
   res: Response
 ): Promise<any> => {
   try {
-    const { name, email, password, phone, address, gender, hobbies } = req.body;
+    const {firstName,lastName, name, email, password} = req.body;
 
     // validation
+    if (!firstName) {
+      return res.status(400).send({ message: "FirstName is Required" });
+    }
+    if (!lastName) {
+      return res.status(400).send({ message: "Lastname is Required" });
+    }
     if (!name) {
-      return res.status(400).send({ message: "Name is Required" });
+      return res.status(400).send({ message: "Username is Required" });
     }
     if (!email) {
       return res.status(400).send({ message: "Email is Required" });
@@ -21,19 +28,7 @@ const registerController = async (
     if (!password) {
       return res.status(400).send({ message: "Password is Required" });
     }
-    if (!phone) {
-      return res.status(400).send({ message: "Phone Number is Required" });
-    }
-    if (!address) {
-      return res.status(400).send({ message: "Address is Required" });
-    }
-    if (!gender) {
-      return res.status(400).send({ message: "Gender is Required" });
-    }
-    if (!hobbies) {
-      return res.status(400).send({ message: "Hobbies Required" });
-    }
-    const isEmail = await isValidEmail(email);
+    const isEmail: boolean = await isValidEmail(email);
     if (!isEmail) {
       return res.status(400).send({ message: "Please Enter Correct Email" });
     }
@@ -45,25 +40,26 @@ const registerController = async (
     if (existingUser) {
       return res.status(409).send({
         success: false,
-        message: "Already Registered please login",
+        message: "Email already Registered please login",
       });
     }
 
     // register user
     const hashedPassword = await hashPassword(password);
 
+    const role = await RoleModel.find({role: 'User'});
+
     // save
     const user = await new userModel({
+      firstName,
+      lastName,
       name,
       email,
-      phone,
-      address,
       password: hashedPassword,
-      gender,
-      hobbies,
+      roles: role
     }).save();
 
-    verifyPhoneNumberAndMail(name, email, phone);
+    // verifyPhoneNumberAndMail(name, email, phone);
 
     res.status(200).send({
       success: true,
@@ -124,10 +120,10 @@ const loginController = async (req: Request, res: Response): Promise<any> => {
       success: true,
       message: "Login successfully",
       user: {
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        address: user.address,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.name,
+        email: user.email
       },
       token,
     });
@@ -135,7 +131,7 @@ const loginController = async (req: Request, res: Response): Promise<any> => {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Error in Login",
+      message: "Something went wrong",
       error,
     });
   }

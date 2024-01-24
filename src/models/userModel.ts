@@ -29,18 +29,18 @@ const userSchema = new Schema(
     },
     phone: {
       type: String,
-      required: true,
+      required: false,
     },
     address: {
       type: String,
-      required: true,
+      required: false,
     },
     profileImage: {
       type: String,
       required: false,
       default: "https://w7.pngwing.com/pngs/665/162/png-transparent-user-avatar-system-watchsport-windows-7-professional-x64-serial-number-others.png"
     },
-    idAdmin:{
+    isAdmin:{
       type: Boolean,
       default: false
     },
@@ -51,7 +51,7 @@ const userSchema = new Schema(
     },
     gender: {
         type: String,
-        required: true,
+        required: false,
         enum: ['Male', 'Female', 'Others'],
     },
     hobbies: [{
