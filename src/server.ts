@@ -1,11 +1,12 @@
 import express, { Application, Request, Response } from 'express';
 import * as dotenv from 'dotenv';
 import cors from 'cors';
-import router from './routes/authRoute';
+import authRouter from './routes/authRoute';
 import connectDB from './config/db';
 
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+import roleRouter from './routes/roleRoute';
 
 // configure env
 dotenv.config();
@@ -45,8 +46,10 @@ const swaggerSpec = swaggerJsdoc(options)
 // Serve Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+
 // routes
-app.use('/api/v1/auth', router);
+app.use('/api/v1/role', roleRouter);
+app.use('/api/v1/auth', authRouter);
 
 
 

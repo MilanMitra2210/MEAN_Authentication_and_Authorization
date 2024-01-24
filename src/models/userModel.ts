@@ -2,9 +2,20 @@ import mongoose, { Schema } from 'mongoose';
 
 const userSchema = new Schema(
   {
+    firstName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     name: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
     },
     email: {
@@ -24,6 +35,20 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
+    profileImage: {
+      type: String,
+      required: false,
+      default: "https://w7.pngwing.com/pngs/665/162/png-transparent-user-avatar-system-watchsport-windows-7-professional-x64-serial-number-others.png"
+    },
+    idAdmin:{
+      type: Boolean,
+      default: false
+    },
+    roles:{
+      type: [Schema.Types.ObjectId],
+      required: true,
+      ref: "Role"
+    },
     gender: {
         type: String,
         required: true,
@@ -31,7 +56,7 @@ const userSchema = new Schema(
     },
     hobbies: [{
         type: String,
-        required:true,
+        required: false,
         enum: ['Reading', 'Travelling', 'Coding'],
     }],
     isMailVerified:{

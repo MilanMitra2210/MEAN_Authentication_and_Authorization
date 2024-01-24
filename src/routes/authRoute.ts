@@ -2,8 +2,8 @@ import express, { Router } from 'express';
 import { registerController, loginController, verifyEmailController, listDataController, verifyDataController, updateDataController, deleteDataController, verifyOTPController } from './../controller/authController';
 import { authenticateToken } from '../middleware/authMiddleware';
 
-// router object
-const router: Router = express.Router();
+// authRouter object
+const authRouter: Router = express.Router();
 
 /**
  * @swagger
@@ -67,7 +67,7 @@ const router: Router = express.Router();
  *       '200':
  *         description: Registered successfully
  */
-router.post('/register', registerController);
+authRouter.post('/register', registerController);
 
 /**
  * @swagger
@@ -85,7 +85,7 @@ router.post('/register', registerController);
  *       '200':
  *         description: Login successfully
  */
-router.post('/login', loginController); // LOGIN || POST
+authRouter.post('/login', loginController); // LOGIN || POST
 
 /**
  * @swagger
@@ -103,7 +103,7 @@ router.post('/login', loginController); // LOGIN || POST
  *               items:
  *                 $ref: '#/components/schemas/users'
  */
-router.get('/users', listDataController); // list of all users || GET
+authRouter.get('/users', listDataController); // list of all users || GET
 
 /**
  * @swagger
@@ -140,7 +140,7 @@ router.get('/users', listDataController); // list of all users || GET
  *             schema:
  *               $ref: '#/components/schemas/user'
  */
-router.put('/update-user/:id', authenticateToken, updateDataController); // update data || PUT
+authRouter.put('/update-user/:id', authenticateToken, updateDataController); // update data || PUT
 
 /**
  * @swagger
@@ -167,7 +167,7 @@ router.put('/update-user/:id', authenticateToken, updateDataController); // upda
  *       '200':
  *         description: User Deleted successfully
  */
-router.delete('/delete-user/:id', authenticateToken, deleteDataController); // delete data || delete
+authRouter.delete('/delete-user/:id', authenticateToken, deleteDataController); // delete data || delete
 
 /**
  * @swagger
@@ -188,7 +188,7 @@ router.delete('/delete-user/:id', authenticateToken, deleteDataController); // d
  *       '200':
  *         description: Verification mail and OTP sent successfully
  */
-router.get('/sendotp', authenticateToken, verifyDataController); // send otp
+authRouter.get('/sendotp', authenticateToken, verifyDataController); // send otp
 
 /**
  * @swagger
@@ -215,7 +215,7 @@ router.get('/sendotp', authenticateToken, verifyDataController); // send otp
  *       '200':
  *         description: User Deleted successfully
  */
-router.get('/verifyotp/:otp', authenticateToken, verifyOTPController); // verify otp
+authRouter.get('/verifyotp/:otp', authenticateToken, verifyOTPController); // verify otp
 
 /**
  * @swagger
@@ -242,7 +242,7 @@ router.get('/verifyotp/:otp', authenticateToken, verifyOTPController); // verify
  *       '200':
  *         description: User Deleted successfully
  */
-router.get('/verifyemail/:token', authenticateToken, verifyEmailController); // verify otp,
+authRouter.get('/verifyemail/:token', authenticateToken, verifyEmailController); // verify otp,
 // for more authetication we can add middleware and pass token
 
-export default router;
+export default authRouter;
