@@ -96,7 +96,6 @@ const loginController = async (req: Request, res: Response, next: NextFunction):
 
     // check user
     const user = await userModel.findOne({ email }).populate("roles", "role");
-    // const {roles} = user;
 
     if (!user) {
       return res.status(404).send({
@@ -104,6 +103,9 @@ const loginController = async (req: Request, res: Response, next: NextFunction):
         message: "Email is not registered",
       });
     }
+    const {roles} = user;
+    // console.log(roles);
+    
 
     const match = await comparePassword(password, user.password);
     if (!match) {
@@ -119,15 +121,10 @@ const loginController = async (req: Request, res: Response, next: NextFunction):
       expiresIn: "7d",
     });
 
-    res.status(200).send({
+    res.cookie("access_token", token, {httpOnly: true}).status(200).send({
       success: true,
       message: "Login successfully",
-      user: {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        username: user.name,
-        email: user.email
-      },
+      user,
       token,
     });
   } catch (error) {
