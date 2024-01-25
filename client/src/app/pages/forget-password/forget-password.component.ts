@@ -7,6 +7,6 @@ import { Component } from '@angular/core';
   templateUrl: './forget-password.component.html',
   styleUrl: './forget-password.component.scss'
 })
-export class ForgetPasswordComponent {
+export default class ForgetPasswordComponent {
 
 }
