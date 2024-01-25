@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { registerController, loginController, verifyEmailController, listDataController, verifyDataController, updateDataController, deleteDataController, verifyOTPController } from './../controller/authController';
+import { registerController, loginController, registerAdminController, verifyEmailController, listDataController, verifyDataController, updateDataController, deleteDataController, verifyOTPController } from './../controller/authController';
 import { authenticateToken } from '../middleware/authMiddleware';
 
 // authRouter object
@@ -244,5 +244,7 @@ authRouter.get('/verifyotp/:otp', authenticateToken, verifyOTPController); // ve
  */
 authRouter.get('/verifyemail/:token', authenticateToken, verifyEmailController); // verify otp,
 // for more authetication we can add middleware and pass token
+
+authRouter.post('/register-admin', registerAdminController);
 
 export default authRouter;

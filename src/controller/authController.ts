@@ -76,6 +76,79 @@ const registerController = async (
     });
   }
 };
+const registerAdminController = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const {firstName,lastName, name, email, password} = req.body;
+
+    // validation
+    if (!firstName) {
+      return res.status(400).send({ message: "FirstName is Required" });
+    }
+    if (!lastName) {
+      return res.status(400).send({ message: "Lastname is Required" });
+    }
+    if (!name) {
+      return res.status(400).send({ message: "Username is Required" });
+    }
+    if (!email) {
+      return res.status(400).send({ message: "Email is Required" });
+    }
+    if (!password) {
+      return res.status(400).send({ message: "Password is Required" });
+    }
+    const isEmail: boolean = await isValidEmail(email);
+    if (!isEmail) {
+      return res.status(400).send({ message: "Please Enter Correct Email" });
+    }
+
+    // check user
+    const existingUser = await userModel.findOne({ email });
+
+    // existing user
+    if (existingUser) {
+      return res.status(409).send({
+        success: false,
+        message: "Email already Registered please login",
+      });
+    }
+
+    // register user
+    const hashedPassword = await hashPassword(password);
+
+    const role = await RoleModel.find({});
+
+    // save
+    const user = await new userModel({
+      firstName,
+      lastName,
+      name,
+      email,
+      password: hashedPassword,
+      isAdmin: true,
+      roles: role
+    }).save();
+
+    // verifyPhoneNumberAndMail(name, email, phone);
+
+    res.status(200).send({
+      success: true,
+      message: "Admin Successfully Registered",
+      user,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in Registration",
+      error,
+    });
+  }
+};
+
+
 
 // Post Login
 const loginController = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
@@ -342,5 +415,5 @@ const verifyOTPController = async (req: Request, res: Response): Promise<any> =>
 
 export {
   registerController, loginController, verifyDataController, listDataController,
-  updateDataController, deleteDataController, verifyEmailController, verifyOTPController
+  updateDataController, deleteDataController, verifyEmailController, verifyOTPController, registerAdminController
 };
