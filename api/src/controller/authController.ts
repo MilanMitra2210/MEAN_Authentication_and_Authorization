@@ -41,7 +41,7 @@ const registerController = async (
     if (existingUser) {
       return res.status(409).send({
         success: false,
-        message: "Email already Registered please login",
+        message: "Email Already Registered Please Login",
       });
     }
 

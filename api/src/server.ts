@@ -19,9 +19,12 @@ connectDB();
 // rest object
 const app: Application = express();
 
-app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors({
+  origin: process.env.ORIGIN,
+  credentials: true
+}));
 
 // Swagger definition options
 const options = {

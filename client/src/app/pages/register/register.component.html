@@ -15,8 +15,8 @@
             <span *ngIf="registerForm.hasError('email', 'email')" class="text-red-500 text-xs">* Email is Invalid</span>
         </div>
         <div class="flex flex-col mt-4 mb-1">
-            <input formControlName="userName" class="p-2 border-gray-300 rounded" type="text" placeholder="Username">
-            <span *ngIf="registerForm.hasError('required', 'userName')  && registerForm.controls['userName'].dirty" class="text-red-500 text-xs">* Username is Required</span>
+            <input formControlName="name" class="p-2 border-gray-300 rounded" type="text" placeholder="Username">
+            <span *ngIf="registerForm.hasError('required', 'name')  && registerForm.controls['name'].dirty" class="text-red-500 text-xs">* Username is Required</span>
         </div>
         <div class="flex flex-col mt-4 mb-1">
             <input  formControlName="password" class="p-2 border-gray-300 rounded" type="password" placeholder="Password">
