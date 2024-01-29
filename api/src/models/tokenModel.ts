@@ -1,12 +1,12 @@
 import mongoose, { Schema } from 'mongoose';
 
-const otpSchema = new Schema(
+const tokenSchema = new Schema(
   {
     _id:{
-        type: String,
+        type: Schema.Types.ObjectId,
         required: true,
     },
-    otp: {
+    token: {
       type: String,
       required: true,
       trim: true,
@@ -15,6 +15,6 @@ const otpSchema = new Schema(
   { timestamps: true }
 );
 
-const otpModel = mongoose.model('otp', otpSchema);
+const tokenModel = mongoose.model('token', tokenSchema);
 
-export default otpModel;
+export default tokenModel;

@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { registerController, loginController, registerAdminController, verifyEmailController, listDataController, verifyDataController, updateDataController, deleteDataController, verifyOTPController } from './../controller/authController';
+import { registerController, loginController, registerAdminController, listDataController, sendEmailController, verifyDataController, updateDataController, deleteDataController } from './../controller/authController';
 import { authenticateToken } from '../middleware/authMiddleware';
 
 // authRouter object
@@ -188,63 +188,12 @@ authRouter.delete('/delete-user/:id', authenticateToken, deleteDataController); 
  *       '200':
  *         description: Verification mail and OTP sent successfully
  */
-authRouter.get('/sendotp', authenticateToken, verifyDataController); // send otp
+authRouter.get('/verify', authenticateToken, verifyDataController); // send otp
 
-/**
- * @swagger
- * /verifyotp/{otp}:
- *   get:
- *     summary: Used to Verify OTP sent to Phone number
- *     description: Used to delete data in MongoDB
- *     parameters:
- *       - in: path
- *         name: otp
- *         required: true
- *         description: Hashed OTP required
- *         schema:
- *           type: string
- *       - in: header
- *         name: Authorization
- *         required: true
- *         description: Token for authentication
- *         schema:
- *           type: string
- *     security:
- *       - BearerAuth: []         
- *     responses:
- *       '200':
- *         description: User Deleted successfully
- */
-authRouter.get('/verifyotp/:otp', authenticateToken, verifyOTPController); // verify otp
-
-/**
- * @swagger
- * /verifyemail/{token}:
- *   get:
- *     summary: Used to verify user's mail.
- *     description: Used to verify user's mail.
- *     parameters:
- *       - in: path
- *         name: token
- *         required: true
- *         description: token required
- *         schema:
- *           type: string
- *       - in: header
- *         name: Authorization
- *         required: true
- *         description: Token for authentication
- *         schema:
- *           type: string
- *     security:
- *       - BearerAuth: []         
- *     responses:
- *       '200':
- *         description: User Deleted successfully
- */
-authRouter.get('/verifyemail/:token', authenticateToken, verifyEmailController); // verify otp,
-// for more authetication we can add middleware and pass token
 
 authRouter.post('/register-admin', registerAdminController);
+
+
+authRouter.post('/send-email', sendEmailController);
 
 export default authRouter;

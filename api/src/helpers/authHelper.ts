@@ -2,7 +2,8 @@ import bcrypt from 'bcrypt';
 import NodeMailer from 'nodemailer';
 import jwt from "jsonwebtoken";
 import twilio from 'twilio';
-import otpModel from '../models/otpModel';
+import otpModel from '../models/tokenModel';
+import tokenModel from '../models/tokenModel';
 
 // Configure nodemailer for sending emails
 const transporter = NodeMailer.createTransport({
@@ -126,11 +127,11 @@ const sendVerificationMail = async (user: any) => {
 
       //save to db
       if(existingOTP){
-        existingOTP.otp = otp;
+        existingOTP.token = otp;
         existingOTP.save();
       }else{
         
-        await new otpModel({
+        await new tokenModel({
           _id: user._id,
           otp
         }).save();
@@ -149,8 +150,46 @@ const sendVerificationMail = async (user: any) => {
     }
   }
 
-
-
 }
 
-export { hashPassword, comparePassword, isValidEmail, verifyPhoneNumberAndMail, sendVerificationMail };
+const sendEmail = async (user: any,  token: string) => {
+
+  const emailBody = `
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset Request</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
+    <p>Dear ${user.firstName} ${user.lastName}, </p>
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1); padding: 30px;">
+      <h2 style="text-align: center; color: #333333;">Password Reset</h2>
+      <p style="text-align: center; color: #666666;">We have received a request to reset your password for your account in MEAN Auth. Please click the link below to reset your password:</p>
+      <p style="text-align: center; margin-top: 30px;"><a href=${process.env.LIVE_URL}/reset/${token} style="background-color: #007bff; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a></p>
+      <p style="text-align: center; color: #666666; margin-top: 20px;">Please note that this link is only valid for 5mins. If you did not request a password reset, please disregard this message.</p>
+    </div>
+  
+  </body>
+  </html>
+  `;
+
+
+  const mailOptions = {
+    from: 'milan.75way@gmail.com',
+    to: user.email,
+    subject: 'Reset Password',
+    text: `Reset Password mail sent successfully`,
+    html: emailBody,
+  };
+
+  const info = await transporter.sendMail(mailOptions, async (error, info) => {
+    if (error) {
+      throw error;
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+}
+
+export { hashPassword, comparePassword, isValidEmail, verifyPhoneNumberAndMail, sendVerificationMail, sendEmail };

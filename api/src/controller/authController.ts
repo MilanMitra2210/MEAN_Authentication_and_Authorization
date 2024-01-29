@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { hashPassword, comparePassword, isValidEmail, verifyPhoneNumberAndMail, sendVerificationMail } from "../helpers/authHelper";
+import { hashPassword, comparePassword, isValidEmail, verifyPhoneNumberAndMail, sendVerificationMail, sendEmail } from "../helpers/authHelper";
 import userModel from "../models/userModel";
 import JWT from "jsonwebtoken";
-import otpModel from "../models/otpModel";
+import otpModel from "../models/tokenModel";
 import RoleModel from "../models/roleModel";
+import tokenModel from "../models/tokenModel";
+import UserModel from "../models/userModel";
 
 
 const registerController = async (
@@ -11,7 +13,7 @@ const registerController = async (
   res: Response
 ): Promise<any> => {
   try {
-    const {firstName,lastName, name, email, password} = req.body;
+    const { firstName, lastName, name, email, password } = req.body;
 
     // validation
     if (!firstName) {
@@ -48,7 +50,7 @@ const registerController = async (
     // register user
     const hashedPassword = await hashPassword(password);
 
-    const role = await RoleModel.find({role: 'User'});
+    const role = await RoleModel.find({ role: 'User' });
 
     // save
     const user = await new userModel({
@@ -81,7 +83,7 @@ const registerAdminController = async (
   res: Response
 ): Promise<any> => {
   try {
-    const {firstName,lastName, name, email, password} = req.body;
+    const { firstName, lastName, name, email, password } = req.body;
 
     // validation
     if (!firstName) {
@@ -176,9 +178,9 @@ const loginController = async (req: Request, res: Response, next: NextFunction):
         message: "Email is not registered",
       });
     }
-    const {roles} = user;
+    const { roles } = user;
     // console.log(roles);
-    
+
 
     const match = await comparePassword(password, user.password);
     if (!match) {
@@ -194,7 +196,7 @@ const loginController = async (req: Request, res: Response, next: NextFunction):
       expiresIn: "7d",
     });
 
-    res.cookie("access_token", token, {httpOnly: true}).status(200).send({
+    res.cookie("access_token", token, { httpOnly: true }).status(200).send({
       success: true,
       message: "Login successfully",
       user,
@@ -262,7 +264,7 @@ const updateDataController = async (req: Request, res: Response): Promise<any> =
       const hashedPassword = await hashPassword(updatedUserData.password);
       updatedUserData.password = hashedPassword;
     }
-    const role = await RoleModel.find({role: updatedUserData.role});
+    const role = await RoleModel.find({ role: updatedUserData.role });
     existingUser.firstName = updatedUserData.firstName || existingUser.firstName;
     existingUser.lastName = updatedUserData.lastName || existingUser.lastName;
     existingUser.name = updatedUserData.name || existingUser.name;
@@ -273,7 +275,7 @@ const updateDataController = async (req: Request, res: Response): Promise<any> =
     // existingUser.address = updatedUserData.address || existingUser.address;
     // existingUser.gender = updatedUserData.gender || existingUser.gender;
     // existingUser.hobbies = updatedUserData.hobbies || existingUser.hobbies;
-    
+
 
     // Save updated user data
     await existingUser.save();
@@ -335,85 +337,47 @@ const verifyDataController = async (req: Request, res: Response): Promise<any> =
   }
 
 }
-const verifyEmailController = async (req: Request, res: Response): Promise<any> => {
-  const { _id } = req.body;
-  const token = req.params.token;
+
+const sendEmailController = async (req: Request, res: Response): Promise<any> => {
   try {
-    const user = await userModel.findById(_id);
+    const { email } = req.body;
+    const isEmail: boolean = await isValidEmail(email);
+    if (!isEmail) {
+      return res.status(400).send({ message: "Please Enter Valid Email" });
+    }
+    // check user
+    const user = await userModel.findOne({ email });
+
+    // existing user
     if (!user) {
-      return res.status(403).json({ message: 'You are Loged out, please Login' });
+      return res.status(400).send({
+        success: false,
+        message: "Email is not Registered, Please Register",
+      });
     }
-    if (user.isMailVerified) {
-      return res.status(403).json({ message: 'You email is Already Verified' });
+    const payload = {
+      email: user.email
     }
-    const jwt_secret_key: string = process.env.JWT_OTP_SECRET || "";
-    let userId: string = "";
-    JWT.verify(token, jwt_secret_key, (err, user) => {
-      if (err) {
-        return res.status(403).json({ message: 'Your token has expired, Please login again.' });
-      }
-      if (typeof user === 'object' && user !== null) {
-        userId = user._id;
-      }
+    const expiryTime = 300;
+    const jwt_secret_key: string = process.env.JWT_SECRET || "";
+    const token: string = JWT.sign(payload, jwt_secret_key, { expiresIn: expiryTime });
+
+    const newToken = new tokenModel({
+      _id: user._id,
+      token: token
     });
-    if (userId === _id ){
-      await userModel.updateOne({ _id: _id }, { $set: { isMailVerified: true } });
-    } else{
-      return res.status(400).json("Access Forbidden, You are trying to verify other's mail");
-    }
-    return res.status(200).json("Email Verified Succucessfully");
+
+    sendEmail(user, token);
+    newToken.save();
+    return res.status(200).json({ message: 'Mail sent successfully' });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    return res.status(500).json({ message: 'Something went wrong' });
   }
 }
 
-const verifyOTPController = async (req: Request, res: Response): Promise<any> => {
-  const { _id } = req.body;
-  const currToken = req.params.otp;
 
-  const token =  currToken.replace("@#$%^&*", '/');
-  
-
-
-  try {
-    const existingOTP = await otpModel.findById(_id);
-    const user = await userModel.findById(_id);
-
-    if (!user) {
-      return res.status(200).json("Your account has been deleted.");
-    }
-    if (user.isPhoneVerified) {
-      return res.status(200).json("Your Phone Number is already verified.");
-    }
-
-    if (!existingOTP) {
-      return res.status(200).json("There is no OTP in Database");
-    }
-    const otp = existingOTP.otp;
-    const match = await comparePassword(otp, token);
-
-    if (!match) {
-      return res.status(403).json("Invalid OTP");
-    }
-    if (existingOTP.updatedAt) {
-      const expireTime = new Date(existingOTP.updatedAt);
-      expireTime.setMinutes(existingOTP.updatedAt.getMinutes() + 5);
-      if (expireTime < new Date()) {
-        return res.status(403).json("Your OTP has expired, Resend OTP");
-      }
-    }
-    await userModel.updateOne({ _id: _id }, { $set: { isPhoneVerified: true } });
-    const deletedOTP = await otpModel.findByIdAndDelete(_id);
-
-    return res.status(200).json({message :"OTP Verified", deletedOTP});
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Internal Server Error' });
-  }
-}
 
 export {
   registerController, loginController, verifyDataController, listDataController,
-  updateDataController, deleteDataController, verifyEmailController, verifyOTPController, registerAdminController
+  updateDataController, deleteDataController, registerAdminController, sendEmailController
 };

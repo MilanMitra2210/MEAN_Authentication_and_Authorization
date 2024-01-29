@@ -22,7 +22,7 @@ const app: Application = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: process.env.ORIGIN,
+  origin: process.env.LIVE_URL,
   credentials: true
 }));
 

@@ -1,4 +1,4 @@
-<div class="lg:w-4/12 m-2 p-10 shadow-2xl mx-auto">
+<div class="lg:w-4/12 m-5 p-10 shadow-2xl mx-auto">
     <h3 class="text-3xl text-center font-semibold py-3">Register</h3>
      <form [formGroup]="registerForm" class="flex flex-col">
         <div class="flex flex-col mt-4 mb-1">
@@ -31,6 +31,6 @@
      </form>
      <div class="flex justify-center m-5">
         <span>Already Have an Account? </span>
-        <a class="text-indigo-600 cursor-pointer">Login here</a>
+        <a routerLink="/login" class="text-indigo-600 cursor-pointer">Login here</a>
      </div>
 </div>
