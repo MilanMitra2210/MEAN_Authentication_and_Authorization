@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { registerController, loginController, registerAdminController, listDataController, sendEmailController, verifyDataController, updateDataController, deleteDataController } from './../controller/authController';
+import { registerController, loginController, registerAdminController, listDataController, sendEmailController, resetPaswordController, verifyDataController, updateDataController, deleteDataController } from './../controller/authController';
 import { authenticateToken } from '../middleware/authMiddleware';
 
 // authRouter object
@@ -195,5 +195,8 @@ authRouter.post('/register-admin', registerAdminController);
 
 
 authRouter.post('/send-email', sendEmailController);
+
+
+authRouter.post('/reset-password', resetPaswordController);
 
 export default authRouter;

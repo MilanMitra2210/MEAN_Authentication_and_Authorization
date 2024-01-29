@@ -1,12 +1,18 @@
 import { Request, Response, NextFunction } from "express";
-import { hashPassword, comparePassword, isValidEmail, verifyPhoneNumberAndMail, sendVerificationMail, sendEmail } from "../helpers/authHelper";
+import {
+  hashPassword,
+  comparePassword,
+  isValidEmail,
+  verifyPhoneNumberAndMail,
+  sendVerificationMail,
+  sendEmail,
+} from "../helpers/authHelper";
 import userModel from "../models/userModel";
 import JWT from "jsonwebtoken";
 import otpModel from "../models/tokenModel";
 import RoleModel from "../models/roleModel";
 import tokenModel from "../models/tokenModel";
 import UserModel from "../models/userModel";
-
 
 const registerController = async (
   req: Request,
@@ -48,9 +54,9 @@ const registerController = async (
     }
 
     // register user
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = await hashPassword(password); 
 
-    const role = await RoleModel.find({ role: 'User' });
+    const role = await RoleModel.find({ role: "User" });
 
     // save
     const user = await new userModel({
@@ -59,7 +65,7 @@ const registerController = async (
       name,
       email,
       password: hashedPassword,
-      roles: role
+      roles: role,
     }).save();
 
     // verifyPhoneNumberAndMail(name, email, phone);
@@ -130,7 +136,7 @@ const registerAdminController = async (
       email,
       password: hashedPassword,
       isAdmin: true,
-      roles: role
+      roles: role,
     }).save();
 
     // verifyPhoneNumberAndMail(name, email, phone);
@@ -150,10 +156,12 @@ const registerAdminController = async (
   }
 };
 
-
-
 // Post Login
-const loginController = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+const loginController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<any> => {
   try {
     const { email, password } = req.body;
 
@@ -166,7 +174,9 @@ const loginController = async (req: Request, res: Response, next: NextFunction):
     //email validation
     const isEmail = await isValidEmail(email);
     if (!isEmail) {
-      return res.status(400).send({ success: false, message: "Please Enter Correct Email" });
+      return res
+        .status(400)
+        .send({ success: false, message: "Please Enter Correct Email" });
     }
 
     // check user
@@ -181,7 +191,6 @@ const loginController = async (req: Request, res: Response, next: NextFunction):
     const { roles } = user;
     // console.log(roles);
 
-
     const match = await comparePassword(password, user.password);
     if (!match) {
       return res.status(403).send({
@@ -192,9 +201,13 @@ const loginController = async (req: Request, res: Response, next: NextFunction):
 
     // token
     const jwt_secret_key: string = process.env.JWT_SECRET || "";
-    const token = await JWT.sign({ _id: user._id, isAdmin: user.isAdmin, roles: roles }, jwt_secret_key, {
-      expiresIn: "7d",
-    });
+    const token = await JWT.sign(
+      { _id: user._id, isAdmin: user.isAdmin, roles: roles },
+      jwt_secret_key,
+      {
+        expiresIn: "7d",
+      }
+    );
 
     res.cookie("access_token", token, { httpOnly: true }).status(200).send({
       success: true,
@@ -212,7 +225,10 @@ const loginController = async (req: Request, res: Response, next: NextFunction):
   }
 };
 
-const listDataController = async (req: Request, res: Response): Promise<any> => {
+const listDataController = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   try {
     // Fetch all documents from the collection
     const users: any[] = await userModel.find({}, { name: 1 }).exec();
@@ -230,34 +246,33 @@ const listDataController = async (req: Request, res: Response): Promise<any> => 
   }
 };
 
-const updateDataController = async (req: Request, res: Response): Promise<any> => {
+const updateDataController = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   const userId = req.params.id;
   const updatedUserData = req.body;
-
-
-
 
   //email validation
   if (updatedUserData.email) {
     const isEmail = await isValidEmail(updatedUserData.email);
     if (!isEmail) {
-      return res.status(400).send({ success: false, message: "Please Enter Correct Email" });
+      return res
+        .status(400)
+        .send({ success: false, message: "Please Enter Correct Email" });
     }
   }
 
-
   if (userId.length != 24) {
-    return res.status(400).json({ message: 'ID is not of specified length' });
+    return res.status(400).json({ message: "ID is not of specified length" });
   }
 
   try {
     const existingUser = await userModel.findById(userId);
 
-
     if (!existingUser) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
-
 
     // Update user fields
     if (updatedUserData.password) {
@@ -265,85 +280,105 @@ const updateDataController = async (req: Request, res: Response): Promise<any> =
       updatedUserData.password = hashedPassword;
     }
     const role = await RoleModel.find({ role: updatedUserData.role });
-    existingUser.firstName = updatedUserData.firstName || existingUser.firstName;
+    existingUser.firstName =
+      updatedUserData.firstName || existingUser.firstName;
     existingUser.lastName = updatedUserData.lastName || existingUser.lastName;
     existingUser.name = updatedUserData.name || existingUser.name;
     existingUser.email = updatedUserData.email || existingUser.email;
-    existingUser.profileImage = updatedUserData.profileImage || existingUser.profileImage;
+    existingUser.profileImage =
+      updatedUserData.profileImage || existingUser.profileImage;
     // existingUser.roles = role || existingUser.roles;
     // existingUser.phone = updatedUserData.phone || existingUser.phone;
     // existingUser.address = updatedUserData.address || existingUser.address;
     // existingUser.gender = updatedUserData.gender || existingUser.gender;
     // existingUser.hobbies = updatedUserData.hobbies || existingUser.hobbies;
 
-
     // Save updated user data
     await existingUser.save();
 
-    return res.status(200).json({ message: 'User updated successfully', user: existingUser });
+    return res
+      .status(200)
+      .json({ message: "User updated successfully", user: existingUser });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-const deleteDataController = async (req: Request, res: Response): Promise<any> => {
+const deleteDataController = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   try {
     const userId = req.params.id;
 
     // Validate the user ID format
     if (userId.length !== 24) {
-      return res.status(400).json({ message: 'Invalid user ID format' });
+      return res.status(400).json({ message: "Invalid user ID format" });
     }
 
     // Check if the user exists
     const existingUser = await userModel.findById(userId);
 
     if (!existingUser) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     // Delete the user
     const deletedUser = await userModel.findByIdAndDelete(userId);
 
-    return res.status(200).json({ message: 'User deleted successfully', deletedUser });
+    return res
+      .status(200)
+      .json({ message: "User deleted successfully", deletedUser });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-const verifyDataController = async (req: Request, res: Response): Promise<any> => {
+const verifyDataController = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   const { _id } = req.body;
-
 
   try {
     const user = await userModel.findById(_id);
     // console.log(user);
 
-
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
     if (user.isMailVerified === true && user.isPhoneVerified == true) {
-      return res.status(201).json({ message: 'User Email and Phone number already verified.' });
+      return res
+        .status(201)
+        .json({ message: "User Email and Phone number already verified." });
     }
     sendVerificationMail(user);
 
-    return res.status(200).json({ message: 'OTP and Verification mail sent successfully' });
+    return res
+      .status(200)
+      .json({ message: "OTP and Verification mail sent successfully" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
+};
 
-}
-
-const sendEmailController = async (req: Request, res: Response): Promise<any> => {
+const sendEmailController = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   try {
     const { email } = req.body;
-    const isEmail: boolean = await isValidEmail(email);
+    // console.log(req.body);
+
+    
+    const isEmail = await isValidEmail(email);
     if (!isEmail) {
-      return res.status(400).send({ message: "Please Enter Valid Email" });
+      return res
+        .status(400)
+        .send({ success: false, message: "Please Enter Correct Email" });
     }
     // check user
     const user = await userModel.findOne({ email });
@@ -356,28 +391,70 @@ const sendEmailController = async (req: Request, res: Response): Promise<any> =>
       });
     }
     const payload = {
-      email: user.email
-    }
-    const expiryTime = 300;
+      email: user.email,
+    };
+    const expiryTime = 10;
     const jwt_secret_key: string = process.env.JWT_SECRET || "";
-    const token: string = JWT.sign(payload, jwt_secret_key, { expiresIn: expiryTime });
+    const token: string = JWT.sign(payload, jwt_secret_key, {
+      expiresIn: expiryTime,
+    });
 
     const newToken = new tokenModel({
       _id: user._id,
-      token: token
+      token: token,
     });
 
     sendEmail(user, token);
     newToken.save();
-    return res.status(200).json({ message: 'Mail sent successfully' });
+    return res.status(200).json({ message: "Mail sent successfully" });
   } catch (error) {
-    return res.status(500).json({ message: 'Something went wrong' });
+    return res.status(500).json({ message: "Something went wrong" });
   }
-}
+};
 
+const resetPaswordController = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { token, password } = req.body;
 
+  try {
+    const jwt_secret_key: string = process.env.JWT_SECRET || "";
+    JWT.verify(token, jwt_secret_key, async (err: any, data: any) => {
+      if (err) {
+        await tokenModel.deleteOne({token});
+        return res.status(500).json({ message: "Reset Link has Expired" });
+      } else {
+        const response = data;
+        const user = await userModel.findOne({ email: response.email });
+        if (!user) {
+          return res
+            .status(400)
+            .json({ message: "User doesnt exist, might be deleted" });
+        }
+        const hashedPassword: string = await hashPassword(password);
+        user.password = hashedPassword;
+
+        user.save();
+
+        await tokenModel.findByIdAndDelete(user._id);
+
+        return res.status(200).json({ message: "Password Reset Successful" });
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
 
 export {
-  registerController, loginController, verifyDataController, listDataController,
-  updateDataController, deleteDataController, registerAdminController, sendEmailController
+  registerController,
+  loginController,
+  verifyDataController,
+  listDataController,
+  updateDataController,
+  deleteDataController,
+  registerAdminController,
+  sendEmailController,
+  resetPaswordController,
 };

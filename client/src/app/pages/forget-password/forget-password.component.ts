@@ -27,6 +27,18 @@ export default class ForgetPasswordComponent {
   sendEmail() {
     console.log(this.forgetForm.value);
     
+    this.authService.sendEmailService(this.forgetForm.value.email).subscribe({
+      next:(res)=>{
+        alert(res.message);
+        this.forgetForm.reset();
+        this.router.navigate(['']);
+      },
+      error: (err) => {
+        alert(err.error.message);
+        console.log(err);
+      }
+    });
+    
   }
 }
 
