@@ -11,22 +11,20 @@ import { CommonModule } from '@angular/common';
   styleUrl: './header.component.scss'
 })
 export class HeaderComponent implements OnInit{
-  
-  
+
   authService = inject(AuthService);
   router = inject(Router);
-  isLoggedIn !: boolean ;
+  isLoggedIn !: boolean;
 
   ngOnInit(): void {
-    this.authService.isLoggedIn$.subscribe(res =>{
-      this.isLoggedIn = this.authService.isLoggedIn();
-    })
+    if(this.authService.getToken()){
+      this.authService.setloggedIn();
+    }
+    this.authService.isLoggedIn().subscribe((loggedIn: boolean) => {
+      this.isLoggedIn = loggedIn;
+    });
   }
-  logout() {
-    // Clear token and perform any additional logout logic
-    localStorage.removeItem('token');
-    this.authService.isLoggedIn$.next(false);
-    // Optionally, navigate to the login page or another appropriate route
-    // this.router.navigate(['/login']);
+  logout(){
+    this.authService.logout();
   }
 }

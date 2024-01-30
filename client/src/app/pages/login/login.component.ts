@@ -30,9 +30,11 @@ export default class LoginComponent  implements OnInit{
       next:(res)=>{
         alert(res.message);
         console.log(res.token);
+
         
-        localStorage.setItem("token", res.token);
-        this.authService.isLoggedIn$.next(true);
+        this.authService.login(res.token);
+
+
         this.loginForm.reset();
         this.router.navigate(['']);
       },

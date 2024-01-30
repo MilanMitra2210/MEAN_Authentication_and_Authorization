@@ -9,21 +9,39 @@ import { BehaviorSubject } from 'rxjs';
 export class AuthService {
 
   http = inject(HttpClient);
-  isLoggedIn$ = new BehaviorSubject<boolean>(false);
+  private loggedIn = new BehaviorSubject<boolean>(false);
 
-  registerService(registerObj: any){
+  registerService(registerObj: any) {
     return this.http.post<any>(`${apiUrls.authServiceApi}register`, registerObj);
   }
-  loginService(loginObj: any){
+  loginService(loginObj: any) {
     return this.http.post<any>(`${apiUrls.authServiceApi}login`, loginObj);
   }
-  sendEmailService(email: string){
-    return this.http.post<any>(`${apiUrls.authServiceApi}send-email`, {email});
+  sendEmailService(email: string) {
+    return this.http.post<any>(`${apiUrls.authServiceApi}send-email`, { email });
   }
-  resetPasswordService(resetObj: any){
+  resetPasswordService(resetObj: any) {
     return this.http.post<any>(`${apiUrls.authServiceApi}reset-password`, resetObj);
   }
-  isLoggedIn(): boolean{
-    return !!localStorage.getItem("token");
+  setloggedIn(){
+    this.loggedIn.next(true);
+  }
+  login(token: string) {
+    // Perform authentication logic
+    localStorage.setItem("token", token);
+    this.loggedIn.next(true);
+  }
+
+  logout() {
+    // Perform logout logic
+    localStorage.removeItem('token');
+    this.loggedIn.next(false);
+  }
+
+  isLoggedIn() {
+    return this.loggedIn.asObservable();
+  }
+  getToken(): any {
+    return localStorage.getItem("token");
   }
 }
