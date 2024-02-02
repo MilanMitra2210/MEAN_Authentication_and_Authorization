@@ -42,6 +42,10 @@ export class AuthService {
     return this.loggedIn.asObservable();
   }
   getToken(): any {
-    return localStorage.getItem("token");
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem('token');
+    } else{
+      return null;
+    }
   }
 }
