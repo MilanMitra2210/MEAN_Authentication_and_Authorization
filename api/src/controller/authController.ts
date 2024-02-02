@@ -393,7 +393,7 @@ const sendEmailController = async (
     const payload = {
       email: user.email,
     };
-    const expiryTime = 10;
+    const expiryTime = 300;
     const jwt_secret_key: string = process.env.JWT_SECRET || "";
     const token: string = JWT.sign(payload, jwt_secret_key, {
       expiresIn: expiryTime,
